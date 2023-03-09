@@ -23,13 +23,16 @@ type App struct {
 }
 
 type Db struct {
-	Host     string `yaml:"host"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-	Port     int    `yaml:"port"`
-	DbName   string `yaml:"dbName"`
-	Timezone string `yaml:"timezone"`
-	Timeout  int    `yaml:"timeout"`
+	Host           string `yaml:"host"`
+	Username       string `yaml:"username"`
+	Password       string `yaml:"password"`
+	Port           int    `yaml:"port"`
+	DbName         string `yaml:"dbName"`
+	Timezone       string `yaml:"timezone"`
+	Timeout        int    `yaml:"timeout"`
+	MigrationPath  string `yaml:"migrationPath"`
+	MigrationTable string `yaml:"migrationTable"`
+	Schema         string `yaml:"schema"`
 }
 
 func LoadConfig() (config *Configuration, e error) {

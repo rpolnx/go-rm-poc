@@ -2,33 +2,73 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"rpolnx.com.br/crud-sql/internal/crud-sql/application/config"
+	"rpolnx.com.br/crud-sql/internal/crud-sql/domain/model"
+	port "rpolnx.com.br/crud-sql/internal/crud-sql/domain/ports"
+	"strconv"
 )
 
 type UserController interface {
 	GetUsers(c *gin.Context)
 	GetUserById(c *gin.Context)
+	CreateUser(c *gin.Context)
 }
 
 type userController struct {
-	cfg *config.Configuration
+	cfg         *config.Configuration
+	userService port.UserUseCase
 }
 
-func (h *userController) GetUsers(c *gin.Context) {
-	m := gin.H{"status": "OK"}
+func (c *userController) GetUsers(ginCtx *gin.Context) {
+	res, err := c.userService.GetAllUsers()
 
-	c.JSON(http.StatusOK, m)
+	logrus.Error(err)
+
+	ginCtx.JSON(http.StatusOK, res)
 }
 
-func (h *userController) GetUserById(c *gin.Context) {
-	m := map[string]interface{}{"status": "OK"}
+func (c *userController) GetUserById(ginCtx *gin.Context) {
+	id, err := strconv.ParseInt(ginCtx.Param("id"), 10, 64)
 
-	c.JSON(http.StatusOK, m)
+	if err != nil {
+		ginCtx.JSON(http.StatusBadRequest, config.HandleError(ginCtx, http.StatusBadRequest, err))
+	}
+
+	res, err := c.userService.GetOneUser(id)
+
+	if err != nil {
+		ginCtx.JSON(http.StatusInternalServerError, config.HandleError(ginCtx, http.StatusInternalServerError, err))
+	}
+
+	ginCtx.JSON(http.StatusOK, res)
 }
 
-func NewUserController(cfg *config.Configuration) UserController {
+func (c *userController) CreateUser(ginCtx *gin.Context) {
+
+	user := &model.User{}
+
+	err := ginCtx.ShouldBindJSON(user)
+
+	if err != nil {
+		ginCtx.JSON(http.StatusBadRequest, config.HandleError(ginCtx, http.StatusBadRequest, err))
+	}
+
+	res, err := c.userService.CreateUser(user)
+
+	if err != nil {
+		ginCtx.JSON(http.StatusInternalServerError, config.HandleError(ginCtx, http.StatusInternalServerError, err))
+	}
+
+	ginCtx.JSON(http.StatusCreated, map[string]interface{}{
+		"Id": res,
+	})
+}
+
+func NewUserController(cfg *config.Configuration, userService port.UserUseCase) UserController {
 	return &userController{
-		cfg: cfg,
+		cfg:         cfg,
+		userService: userService,
 	}
 }
