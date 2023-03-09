@@ -1,12 +1,11 @@
 package model
 
 import (
-	"gorm.io/gorm"
 	"time"
 )
 
 type BaseModel struct {
-	CreatedAt time.Time `gorm:"autoCreateTime"`
-	UpdatedAt time.Time `gorm:"autoUpdateTime"`
-	DeletedAt gorm.DeletedAt
+	CreatedAt time.Time `pg:"default:now()"`
+	UpdatedAt time.Time
+	DeletedAt time.Time
 }
