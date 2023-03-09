@@ -2,7 +2,7 @@ package server
 
 import (
 	"github.com/gin-gonic/gin"
-	"log"
+	"github.com/sirupsen/logrus"
 	"rpolnx.com.br/crud-sql/internal/crud-sql/application/config"
 	"rpolnx.com.br/crud-sql/internal/crud-sql/application/controller"
 	"rpolnx.com.br/crud-sql/internal/crud-sql/application/routes"
@@ -12,7 +12,7 @@ import (
 )
 
 func LoadServer(cfg *config.Configuration) (*gin.Engine, error) {
-	log.Println("Initializing dependencies")
+	logrus.Println("Initializing dependencies")
 
 	server := gin.Default()
 

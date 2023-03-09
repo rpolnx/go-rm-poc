@@ -25,6 +25,7 @@ func NewPgClient(cfgApp *config.App, cfgDb *config.Db) (*pg.DB, error) {
 		ReadTimeout:     time.Duration(cfgDb.Timeout) * time.Second,
 		WriteTimeout:    time.Duration(cfgDb.Timeout) * time.Second,
 	})
+	db.AddQueryHook(config.DbLogger{})
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cfgDb.Timeout)*time.Second)
 	defer cancel()

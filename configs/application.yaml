@@ -1,5 +1,5 @@
 app:
-  name: go-consul
+  name: crud-sql
   profile: local
   timeout: 60
   port: 8080

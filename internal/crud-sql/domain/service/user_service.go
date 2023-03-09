@@ -13,12 +13,20 @@ func (svc *userService) GetAllUsers() ([]*model.User, error) {
 	return svc.userPort.GetAllUsersOut()
 }
 
-func (svc *userService) GetOneUser(id int64) (*model.User, error) {
+func (svc *userService) GetOneUser(id *int64) (*model.User, error) {
 	return svc.userPort.GetOneUserOut(id)
 }
 
-func (svc *userService) CreateUser(user *model.User) (int64, error) {
+func (svc *userService) CreateUser(user *model.User) (*int64, error) {
 	return svc.userPort.CreateUserOut(user)
+}
+
+func (svc *userService) UpdateUser(id *int64, user *model.User) (*int64, error) {
+	return svc.userPort.UpdateUserOut(id, user)
+}
+
+func (svc *userService) DeleteUser(id *int64) error {
+	return svc.userPort.DeleteUserOut(id)
 }
 
 func NewUserService(userPort port.UserPort) port.UserUseCase {

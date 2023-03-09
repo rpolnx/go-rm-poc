@@ -17,4 +17,6 @@ func NewUserRoute(c *gin.Engine, ctrl controller.UserController) {
 	c.GET("/users", ctrl.GetUsers)
 	c.GET("/users/:id", ctrl.GetUserById)
 	c.POST("/users", ctrl.CreateUser)
+	c.PUT("/users/:id", ctrl.UpdateUser)
+	c.DELETE("/users/:id", ctrl.DeleteUser)
 }
