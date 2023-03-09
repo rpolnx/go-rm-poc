@@ -2,7 +2,8 @@ version: '3.7'
 
 services:
   postgresql:
-    image: bitnami/postgresql
+    container_name: 'crud-sql'
+    image: bitnami/postgresql:14.7.0-debian-11-r10
     environment:
       POSTGRESQL_USERNAME: postgres
       POSTGRESQL_PASSWORD: password
@@ -11,4 +12,4 @@ services:
       - ./configs/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
-    restart: always
+#    restart: always
