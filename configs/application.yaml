@@ -7,8 +7,11 @@ app:
 db:
   host: "localhost"
   port: 5432
-  username: optii_postgres
+  username: local_admin
   password: password
-  dbName: "crud-sql"
+  dbName: "crud_sql"
+  schema: "crud_sql"
   timezone: "America/Sao_Paulo"
   timeout: 60
+  migrationPath: "configs/migrations"
+  migrationTable: "gopg_migrations"
