@@ -1,8 +1,8 @@
-CREATE USER customer_user WITH PASSWORD 'customer_pass';
+CREATE USER crud_sql WITH PASSWORD 'crud-password';
 
-CREATE DATABASE customer;
+CREATE DATABASE 'crud-sql';
 \c customer;
-CREATE SCHEMA customer;
+CREATE SCHEMA 'crud-sql';
 REVOKE ALL ON DATABASE customer FROM PUBLIC;
 GRANT ALL PRIVILEGES ON DATABASE customer TO customer_user;
 GRANT ALL PRIVILEGES ON SCHEMA customer TO customer_user;

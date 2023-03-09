@@ -1,13 +1,12 @@
 version: '3.7'
 
 services:
-  postgres:
-    container_name: postgres-bank
-    image: postgres:12.4-alpine
+  postgresql:
+    image: bitnami/postgresql
     environment:
-      POSTGRES_USER: ${PG_ROOT_USER}
-      POSTGRES_PASSWORD: ${PG_ROOT_PASS}
-      POSTGRES_DATABASE: postgres
+      POSTGRESQL_USERNAME: postgres
+      POSTGRESQL_PASSWORD: password
+      POSTGRESQL_DATABASE: postgres
     volumes:
       - ./configs/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
