@@ -3,3 +3,12 @@ app:
   profile: local
   timeout: 60
   port: 8080
+
+db:
+  host: "localhost"
+  port: 5432
+  username: optii_postgres
+  password: password
+  dbName: "crud-sql"
+  timezone: "America/Sao_Paulo"
+  timeout: 60
