@@ -2,10 +2,11 @@ package repository
 
 import (
 	"github.com/go-pg/pg/v10"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+	"rpolnx.com.br/crud-sql/internal/crud-sql/application/config"
 	"rpolnx.com.br/crud-sql/internal/crud-sql/domain/model"
 	port "rpolnx.com.br/crud-sql/internal/crud-sql/domain/ports"
+	"rpolnx.com.br/crud-sql/internal/crud-sql/infrastructure/repository/postgres"
 	"time"
 )
 
@@ -20,7 +21,7 @@ func (svc *userRepository) GetAllUsersOut() ([]*model.User, error) {
 		Where("deleted_at IS NULL").
 		Select()
 
-	return users, err
+	return users, postgres.HandleDbError(err)
 }
 
 func (svc *userRepository) GetOneUserOut(id *int64) (*model.User, error) {
@@ -32,7 +33,7 @@ func (svc *userRepository) GetOneUserOut(id *int64) (*model.User, error) {
 		WherePK().
 		Select()
 
-	return user, err
+	return user, postgres.HandleDbError(err)
 }
 
 func (svc *userRepository) CreateUserOut(user *model.User) (*int64, error) {
@@ -43,7 +44,7 @@ func (svc *userRepository) CreateUserOut(user *model.User) (*int64, error) {
 		Insert()
 
 	if err != nil {
-		return nil, err
+		return nil, postgres.HandleDbError(err)
 	}
 
 	affected := insert.RowsAffected()
@@ -63,7 +64,7 @@ func (svc *userRepository) UpdateUserOut(id *int64, user *model.User) (*int64, e
 		UpdateNotZero()
 
 	if err != nil {
-		return nil, err
+		return nil, postgres.HandleDbError(err)
 	}
 
 	affected := updated.RowsAffected()
@@ -71,7 +72,7 @@ func (svc *userRepository) UpdateUserOut(id *int64, user *model.User) (*int64, e
 	logrus.Infof("Afftected %d", affected)
 
 	if affected == 0 {
-		return nil, errors.New("not found")
+		return nil, &config.NotFoundError{Name: "User"}
 	}
 
 	return user.Id, err
@@ -97,7 +98,11 @@ func (svc *userRepository) DeleteUserOut(id *int64) error {
 	affected := deleted.RowsAffected()
 	logrus.Info(affected)
 
-	return err
+	if affected == 0 {
+		return &config.NotFoundError{Name: "User"}
+	}
+
+	return postgres.HandleDbError(err)
 }
 
 func NewUserRepository(db *pg.DB) port.UserPort {

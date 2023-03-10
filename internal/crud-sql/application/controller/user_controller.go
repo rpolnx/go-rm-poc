@@ -2,10 +2,10 @@ package controller
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"rpolnx.com.br/crud-sql/internal/crud-sql/application/config"
-	"rpolnx.com.br/crud-sql/internal/crud-sql/domain/model"
+	"rpolnx.com.br/crud-sql/internal/crud-sql/application/dto/request"
+	"rpolnx.com.br/crud-sql/internal/crud-sql/application/dto/response"
 	port "rpolnx.com.br/crud-sql/internal/crud-sql/domain/ports"
 	"strconv"
 )
@@ -24,25 +24,36 @@ type userController struct {
 }
 
 func (c *userController) GetUsers(ginCtx *gin.Context) {
-	res, err := c.userService.GetAllUsers()
+	users, err := c.userService.GetAllUsers()
 
-	logrus.Error(err)
+	if err != nil {
+		ginCtx.JSON(config.HandleHttpError(ginCtx, err))
+		return
+	}
 
-	ginCtx.JSON(http.StatusOK, res)
+	response := make([]*response_dto.UserResponseDTO, 0)
+
+	for _, user := range users {
+		userResponseDTO := &response_dto.UserResponseDTO{}
+		userResponseDTO = userResponseDTO.FromEntity(user)
+		response = append(response, userResponseDTO)
+	}
+
+	ginCtx.JSON(http.StatusOK, response)
 }
 
 func (c *userController) GetUserById(ginCtx *gin.Context) {
 	id, err := strconv.ParseInt(ginCtx.Param("id"), 10, 64)
 
 	if err != nil {
-		ginCtx.JSON(http.StatusBadRequest, config.HandleError(ginCtx, http.StatusBadRequest, err))
+		ginCtx.JSON(config.HandleHttpError(ginCtx, err, http.StatusBadRequest))
 		return
 	}
 
 	res, err := c.userService.GetOneUser(&id)
 
 	if err != nil {
-		ginCtx.JSON(http.StatusInternalServerError, config.HandleError(ginCtx, http.StatusInternalServerError, err))
+		ginCtx.JSON(config.HandleHttpError(ginCtx, err))
 		return
 	}
 
@@ -50,49 +61,50 @@ func (c *userController) GetUserById(ginCtx *gin.Context) {
 }
 
 func (c *userController) CreateUser(ginCtx *gin.Context) {
+	userDto := &request_dto.UserRequestDTO{}
 
-	user := &model.User{}
-
-	err := ginCtx.ShouldBindJSON(user)
+	err := ginCtx.ShouldBindJSON(userDto)
 
 	if err != nil {
-		ginCtx.JSON(http.StatusBadRequest, config.HandleError(ginCtx, http.StatusBadRequest, err))
+		ginCtx.JSON(config.HandleHttpError(ginCtx, err, http.StatusBadRequest))
 		return
 	}
 
-	res, err := c.userService.CreateUser(user)
+	id, err := c.userService.CreateUser(userDto.ToEntity())
 
 	if err != nil {
-		ginCtx.JSON(http.StatusInternalServerError, config.HandleError(ginCtx, http.StatusInternalServerError, err))
+		ginCtx.JSON(config.HandleHttpError(ginCtx, err))
 		return
 	}
 
-	ginCtx.JSON(http.StatusCreated, map[string]interface{}{
-		"Id": res,
-	})
+	userResponseDTO := &response_dto.UserResponseDTO{
+		Id: id,
+	}
+
+	ginCtx.JSON(http.StatusCreated, userResponseDTO)
 }
 
 func (c *userController) UpdateUser(ginCtx *gin.Context) {
 	id, err := strconv.ParseInt(ginCtx.Param("id"), 10, 64)
 
 	if err != nil {
-		ginCtx.JSON(http.StatusBadRequest, config.HandleError(ginCtx, http.StatusBadRequest, err))
+		ginCtx.JSON(config.HandleHttpError(ginCtx, err, http.StatusBadRequest))
 		return
 	}
 
-	user := &model.User{}
+	userDto := &request_dto.UserRequestDTO{}
 
-	err = ginCtx.ShouldBindJSON(user)
+	err = ginCtx.ShouldBindJSON(userDto)
 
 	if err != nil {
-		ginCtx.JSON(http.StatusBadRequest, config.HandleError(ginCtx, http.StatusBadRequest, err))
+		ginCtx.JSON(config.HandleHttpError(ginCtx, err, http.StatusBadRequest))
 		return
 	}
 
-	res, err := c.userService.UpdateUser(&id, user)
+	res, err := c.userService.UpdateUser(&id, userDto.ToEntity())
 
 	if err != nil {
-		ginCtx.JSON(http.StatusInternalServerError, config.HandleError(ginCtx, http.StatusInternalServerError, err))
+		ginCtx.JSON(config.HandleHttpError(ginCtx, err))
 		return
 	}
 
@@ -103,14 +115,14 @@ func (c *userController) DeleteUser(ginCtx *gin.Context) {
 	id, err := strconv.ParseInt(ginCtx.Param("id"), 10, 64)
 
 	if err != nil {
-		ginCtx.JSON(http.StatusBadRequest, config.HandleError(ginCtx, http.StatusBadRequest, err))
+		ginCtx.JSON(config.HandleHttpError(ginCtx, err, http.StatusBadRequest))
 		return
 	}
 
 	err = c.userService.DeleteUser(&id)
 
 	if err != nil {
-		ginCtx.JSON(http.StatusInternalServerError, config.HandleError(ginCtx, http.StatusInternalServerError, err))
+		ginCtx.JSON(config.HandleHttpError(ginCtx, err))
 		return
 	}
 
