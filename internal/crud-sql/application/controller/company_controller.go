@@ -50,14 +50,17 @@ func (c *companyController) GetCompanyById(ginCtx *gin.Context) {
 		return
 	}
 
-	res, err := c.companyService.GetOneCompany(&id)
+	company, err := c.companyService.GetOneCompany(&id)
 
 	if err != nil {
 		ginCtx.JSON(config.HandleHttpError(ginCtx, err))
 		return
 	}
 
-	ginCtx.JSON(http.StatusOK, res)
+	companyResponseDTO := &response_dto.CompanyResponseDTO{}
+	companyResponseDTO = companyResponseDTO.FromEntity(company)
+
+	ginCtx.JSON(http.StatusOK, companyResponseDTO)
 }
 
 func (c *companyController) CreateCompany(ginCtx *gin.Context) {
@@ -101,14 +104,18 @@ func (c *companyController) UpdateCompany(ginCtx *gin.Context) {
 		return
 	}
 
-	res, err := c.companyService.UpdateCompany(&id, companyDto.ToEntity())
+	updatedId, err := c.companyService.UpdateCompany(&id, companyDto.ToEntity())
 
 	if err != nil {
 		ginCtx.JSON(config.HandleHttpError(ginCtx, err))
 		return
 	}
 
-	ginCtx.JSON(http.StatusOK, res)
+	responseDTO := &response_dto.UserResponseDTO{
+		Id: updatedId,
+	}
+
+	ginCtx.JSON(http.StatusOK, responseDTO)
 }
 
 func (c *companyController) DeleteCompany(ginCtx *gin.Context) {

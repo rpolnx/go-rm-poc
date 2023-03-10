@@ -13,6 +13,8 @@ type UserResponseDTO struct {
 	Rg    *string `json:"rg,omitempty"`
 	Cpf   *string `json:"cpf,omitempty"`
 
+	Jobs []*JobResponseDTO `json:"jobs,omitempty"`
+
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`

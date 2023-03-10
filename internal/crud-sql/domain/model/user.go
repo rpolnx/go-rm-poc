@@ -11,6 +11,8 @@ type User struct {
 	Rg    *string `pg:"rg,notnull,unique"`
 	Cpf   *string `pg:"cpf,notnull,unique"`
 
+	Jobs []*Job `pg:"rel:has-many"`
+
 	CreatedAt *time.Time `pg:"created_at,default:now()"`
 	UpdatedAt *time.Time `pg:"updated_at,default:now()"`
 	DeletedAt *time.Time `pg:"deleted_at"`

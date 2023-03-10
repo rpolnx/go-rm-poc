@@ -50,14 +50,17 @@ func (c *userController) GetUserById(ginCtx *gin.Context) {
 		return
 	}
 
-	res, err := c.userService.GetOneUser(&id)
+	user, err := c.userService.GetOneUser(&id)
 
 	if err != nil {
 		ginCtx.JSON(config.HandleHttpError(ginCtx, err))
 		return
 	}
 
-	ginCtx.JSON(http.StatusOK, res)
+	userResponseDTO := &response_dto.UserResponseDTO{}
+	userResponseDTO = userResponseDTO.FromEntity(user)
+
+	ginCtx.JSON(http.StatusOK, userResponseDTO)
 }
 
 func (c *userController) CreateUser(ginCtx *gin.Context) {
@@ -101,14 +104,18 @@ func (c *userController) UpdateUser(ginCtx *gin.Context) {
 		return
 	}
 
-	res, err := c.userService.UpdateUser(&id, userDto.ToEntity())
+	updatedId, err := c.userService.UpdateUser(&id, userDto.ToEntity())
 
 	if err != nil {
 		ginCtx.JSON(config.HandleHttpError(ginCtx, err))
 		return
 	}
 
-	ginCtx.JSON(http.StatusOK, res)
+	userResponseDTO := &response_dto.UserResponseDTO{
+		Id: updatedId,
+	}
+
+	ginCtx.JSON(http.StatusOK, userResponseDTO)
 }
 
 func (c *userController) DeleteUser(ginCtx *gin.Context) {

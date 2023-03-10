@@ -19,6 +19,7 @@ func (svc *companyRepository) GetAllCompaniesOut() ([]*model.Company, error) {
 
 	err := svc.Db.Model(&companies).
 		Where("deleted_at IS NULL").
+		Relation("Jobs").
 		Select()
 
 	return companies, postgres.HandleDbError(err)
@@ -31,6 +32,7 @@ func (svc *companyRepository) GetOneCompanyOut(id *int64) (*model.Company, error
 
 	err := svc.Db.Model(company).
 		WherePK().
+		Relation("Jobs").
 		Select()
 
 	return company, postgres.HandleDbError(err)
@@ -41,6 +43,7 @@ func (svc *companyRepository) CreateCompanyOut(company *model.Company) (*int64, 
 
 	insert, err := svc.Db.
 		Model(company).
+		Relation("Jobs").
 		Insert()
 
 	if err != nil {
@@ -61,6 +64,7 @@ func (svc *companyRepository) UpdateCompanyOut(id *int64, company *model.Company
 	updated, err := svc.Db.
 		Model(company).
 		WherePK().
+		Relation("Jobs").
 		UpdateNotZero()
 
 	if err != nil {

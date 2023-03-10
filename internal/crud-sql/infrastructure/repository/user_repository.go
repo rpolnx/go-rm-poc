@@ -19,6 +19,7 @@ func (svc *userRepository) GetAllUsersOut() ([]*model.User, error) {
 
 	err := svc.Db.Model(&users).
 		Where("deleted_at IS NULL").
+		Relation("Jobs").
 		Select()
 
 	return users, postgres.HandleDbError(err)
@@ -31,6 +32,7 @@ func (svc *userRepository) GetOneUserOut(id *int64) (*model.User, error) {
 
 	err := svc.Db.Model(user).
 		WherePK().
+		Relation("Jobs").
 		Select()
 
 	return user, postgres.HandleDbError(err)
@@ -41,6 +43,7 @@ func (svc *userRepository) CreateUserOut(user *model.User) (*int64, error) {
 
 	insert, err := svc.Db.
 		Model(user).
+		Relation("Jobs").
 		Insert()
 
 	if err != nil {
@@ -60,6 +63,7 @@ func (svc *userRepository) UpdateUserOut(id *int64, user *model.User) (*int64, e
 
 	updated, err := svc.Db.
 		Model(user).
+		Relation("Jobs").
 		WherePK().
 		UpdateNotZero()
 

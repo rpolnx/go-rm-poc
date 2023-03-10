@@ -7,20 +7,18 @@ import (
 	"github.com/jinzhu/copier"
 )
 
-type CompanyRequestDTO struct {
-	Id   *int64  `json:"id"`
-	Name *string `json:"name,omitempty"`
-	Cnpj *string `json:"cnpj,omitempty"`
-
-	Jobs []*JobRequestDTO `json:"jobs,omitempty"`
+type JobRequestDTO struct {
+	Id          *int64   `json:"id"`
+	MonthSalary *float64 `json:"month_salary,omitempty"`
+	HoursPerDay *int     `json:"hours_per_day,omitempty"`
 
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
 	DeletedAt *time.Time `json:"deleted_at,omitempty"`
 }
 
-func (dto *CompanyRequestDTO) ToEntity() (company *model.Company) {
-	company = &model.Company{}
+func (dto *JobRequestDTO) ToEntity() (company *model.Job) {
+	company = &model.Job{}
 
 	_ = copier.Copy(company, &dto)
 
