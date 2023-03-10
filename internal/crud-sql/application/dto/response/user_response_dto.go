@@ -10,6 +10,8 @@ type UserResponseDTO struct {
 	Id    *int64  `json:"id"`
 	Name  *string `json:"name,omitempty"`
 	Email *string `json:"email,omitempty"`
+	Rg    *string `json:"rg,omitempty"`
+	Cpf   *string `json:"cpf,omitempty"`
 
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 	UpdatedAt *time.Time `json:"updated_at,omitempty"`
