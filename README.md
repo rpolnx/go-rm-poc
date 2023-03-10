@@ -5,12 +5,17 @@
 Run application directly on main.go
 
 ```sh
-    go get -u ./internal/...
+    go get -u -v -f all
     go mod tidy
-    go build main.go
-    go run main
 ```
 
+```sh
+  go build cmd/go_pg_poc.go
+```
+
+```sh
+  go run cmd/go_pg_poc.go
+```
 ---
 
 # TODO
