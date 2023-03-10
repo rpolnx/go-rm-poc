@@ -7,9 +7,9 @@ type User struct {
 
 	Id    *int64  `pg:"id,pk"`
 	Name  *string `pg:"name,"`
-	Email *string `pg:"email,required"`
-	Rg    *string `pg:"rg"`
-	Cpf   *string `pg:"cpf"`
+	Email *string `pg:"email,notnull,unique"`
+	Rg    *string `pg:"rg,notnull,unique"`
+	Cpf   *string `pg:"cpf,notnull,unique"`
 
 	CreatedAt *time.Time `pg:"created_at,default:now()"`
 	UpdatedAt *time.Time `pg:"updated_at,default:now()"`

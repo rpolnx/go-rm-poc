@@ -22,17 +22,19 @@ func LoadServer(cfg *config.Configuration) (*gin.Engine, error) {
 		return nil, err
 	}
 
+	companyRepository := repository.NewCompanyRepository(dbClient)
 	userRepository := repository.NewUserRepository(dbClient)
 
+	companyService := service.NewCompanyService(companyRepository)
 	userService := service.NewUserService(userRepository)
 
-	envController := controller.NewEnvController(cfg)
 	healthcheckController := controller.NewHealthcheckController(cfg)
 	userController := controller.NewUserController(cfg, userService)
+	companyController := controller.NewCompanyController(cfg, companyService)
 
-	routes.NewEnvRoute(server, envController)
 	routes.NewHealthcheckRoute(server, healthcheckController)
 	routes.NewUserRoute(server, userController)
+	routes.NewCompanyRoute(server, companyController)
 
 	return server, nil
 }
