@@ -1,26 +1,27 @@
 package repository
 
 import (
-	"github.com/go-pg/pg/v10"
 	"github.com/sirupsen/logrus"
+	"github.com/uptrace/bun"
+	"golang.org/x/net/context"
 	"rpolnx.com.br/crud-sql/internal/crud-sql/application/config"
 	"rpolnx.com.br/crud-sql/internal/crud-sql/domain/model"
 	port "rpolnx.com.br/crud-sql/internal/crud-sql/domain/ports"
 	"rpolnx.com.br/crud-sql/internal/crud-sql/infrastructure/repository/postgres"
-	"time"
 )
 
 type userRepository struct {
-	Db *pg.DB
+	Db *bun.DB
 }
 
 func (svc *userRepository) GetAllUsersOut() ([]*model.User, error) {
 	users := make([]*model.User, 0)
 
-	err := svc.Db.Model(&users).
-		Where("deleted_at IS NULL").
-		Relation("Jobs").
-		Select()
+	res, err := svc.Db.NewSelect().
+		Model(&users).
+		Exec(context.Background())
+
+	logrus.Debugf("Result from select %v", res)
 
 	return users, postgres.HandleDbError(err)
 }
@@ -30,10 +31,12 @@ func (svc *userRepository) GetOneUserOut(id *int64) (*model.User, error) {
 		Id: id,
 	}
 
-	err := svc.Db.Model(user).
+	res, err := svc.Db.NewSelect().
+		Model(user).
 		WherePK().
-		Relation("Jobs").
-		Select()
+		Exec(context.Background())
+
+	logrus.Debugf("Result from select %v", res)
 
 	return user, postgres.HandleDbError(err)
 }
@@ -41,37 +44,34 @@ func (svc *userRepository) GetOneUserOut(id *int64) (*model.User, error) {
 func (svc *userRepository) CreateUserOut(user *model.User) (*int64, error) {
 	user.Id = nil
 
-	insert, err := svc.Db.
+	insert, err := svc.Db.NewInsert().
 		Model(user).
-		Relation("Jobs").
-		Insert()
+		Exec(context.Background())
 
 	if err != nil {
 		return nil, postgres.HandleDbError(err)
 	}
 
-	affected := insert.RowsAffected()
+	affected, err := insert.RowsAffected()
 	logrus.Info(affected)
 
 	return user.Id, err
 }
 
 func (svc *userRepository) UpdateUserOut(id *int64, user *model.User) (*int64, error) {
-	now := time.Now()
 	user.Id = id
-	user.UpdatedAt = &now
 
-	updated, err := svc.Db.
+	updated, err := svc.Db.NewUpdate().
 		Model(user).
-		Relation("Jobs").
 		WherePK().
-		UpdateNotZero()
+		OmitZero().
+		Exec(context.Background())
 
 	if err != nil {
 		return nil, postgres.HandleDbError(err)
 	}
 
-	affected := updated.RowsAffected()
+	affected, err := updated.RowsAffected()
 
 	logrus.Infof("Afftected %d", affected)
 
@@ -83,21 +83,19 @@ func (svc *userRepository) UpdateUserOut(id *int64, user *model.User) (*int64, e
 }
 
 func (svc *userRepository) DeleteUserOut(id *int64) error {
-	now := time.Now()
 	user := &model.User{Id: id}
-	user.UpdatedAt = &now
-	user.DeletedAt = &now
 
-	deleted, err := svc.Db.
+	deleted, err := svc.Db.NewDelete().
 		Model(user).
 		WherePK().
-		UpdateNotZero()
+		//OmitZero().
+		Exec(context.Background())
 
 	if err != nil {
 		return err
 	}
 
-	affected := deleted.RowsAffected()
+	affected, err := deleted.RowsAffected()
 	logrus.Info(affected)
 
 	if affected == 0 {
@@ -107,7 +105,7 @@ func (svc *userRepository) DeleteUserOut(id *int64) error {
 	return postgres.HandleDbError(err)
 }
 
-func NewUserRepository(db *pg.DB) port.UserPort {
+func NewUserRepository(db *bun.DB) port.UserPort {
 	return &userRepository{
 		Db: db,
 	}

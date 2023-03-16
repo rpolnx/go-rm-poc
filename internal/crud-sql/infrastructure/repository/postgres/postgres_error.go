@@ -9,7 +9,7 @@ import (
 func HandleDbError(dbError error) error {
 
 	if dbError == nil {
-		return dbError
+		return nil
 	}
 
 	message := dbError.Error()

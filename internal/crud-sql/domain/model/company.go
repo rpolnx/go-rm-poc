@@ -1,13 +1,17 @@
 package model
 
+import "github.com/uptrace/bun"
+
 type Company struct {
-	tableName struct{} `pg:"crud_sql.companies"`
+	bun.BaseModel `bun:"table:crud_sql.companies,alias:c"`
 
-	Id   *int64  `pg:"id,pk"`
-	Name *string `pg:"name,notnull,unique"`
-	Cnpj *string `pg:"cnpj,notnull,unique"`
+	Id   *int64  `bun:"id,pk,autoincrement"`
+	Name *string `bun:"name,notnull,unique"`
+	Cnpj *string `bun:"cnpj,notnull,unique"`
 
-	Jobs []*Job `pg:"rel:has-many"`
+	Jobs []*Job `bun:"rel:has-many"`
 
 	Base
 }
+
+var _ bun.BeforeAppendModelHook = (*Company)(nil)
