@@ -6,7 +6,7 @@ app:
 
 db:
   host: "localhost"
-  port: 5432
+  port: 5433
   username: local_admin
   password: password
   dbName: "crud_sql"
