@@ -84,11 +84,9 @@ func (svc *userRepository) UpdateUserOut(id *int64, user *model.User) (*int64, e
 
 func (svc *userRepository) DeleteUserOut(id *int64) error {
 	now := time.Now()
-	user := &model.User{
-		Id:        id,
-		UpdatedAt: &now,
-		DeletedAt: &now,
-	}
+	user := &model.User{Id: id}
+	user.UpdatedAt = &now
+	user.DeletedAt = &now
 
 	deleted, err := svc.Db.
 		Model(user).

@@ -84,11 +84,9 @@ func (svc *companyRepository) UpdateCompanyOut(id *int64, company *model.Company
 
 func (svc *companyRepository) DeleteCompanyOut(id *int64) error {
 	now := time.Now()
-	company := &model.Company{
-		Id:        id,
-		UpdatedAt: &now,
-		DeletedAt: &now,
-	}
+	company := &model.Company{Id: id}
+	company.UpdatedAt = &now
+	company.DeletedAt = &now
 
 	deleted, err := svc.Db.
 		Model(company).

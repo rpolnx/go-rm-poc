@@ -1,7 +1,5 @@
 package model
 
-import "time"
-
 type Job struct {
 	tableName struct{} `pg:"crud_sql.jobs"`
 
@@ -15,7 +13,5 @@ type Job struct {
 	UserId *int64 `pg:"user_id"`
 	User   *User  `pg:"fk:user_id,rel:has-one"`
 
-	CreatedAt *time.Time `pg:"created_at,default:now()"`
-	UpdatedAt *time.Time `pg:"updated_at,default:now()"`
-	DeletedAt *time.Time `pg:"deleted_at"`
+	Base
 }
