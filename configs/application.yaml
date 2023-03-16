@@ -14,4 +14,4 @@ db:
   timezone: "America/Sao_Paulo"
   timeout: 60
   migrationPath: "configs/migrations"
-  migrationTable: "gopg_migrations"
+  migrationTable: "bun_migrations"

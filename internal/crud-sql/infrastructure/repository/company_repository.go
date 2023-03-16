@@ -1,26 +1,28 @@
 package repository
 
 import (
-	"github.com/go-pg/pg/v10"
 	"github.com/sirupsen/logrus"
+	"github.com/uptrace/bun"
+	"golang.org/x/net/context"
 	"rpolnx.com.br/crud-sql/internal/crud-sql/application/config"
 	"rpolnx.com.br/crud-sql/internal/crud-sql/domain/model"
 	port "rpolnx.com.br/crud-sql/internal/crud-sql/domain/ports"
 	"rpolnx.com.br/crud-sql/internal/crud-sql/infrastructure/repository/postgres"
-	"time"
 )
 
 type companyRepository struct {
-	Db *pg.DB
+	Db *bun.DB
 }
 
 func (svc *companyRepository) GetAllCompaniesOut() ([]*model.Company, error) {
 	companies := make([]*model.Company, 0)
 
-	err := svc.Db.Model(&companies).
-		Where("deleted_at IS NULL").
+	res, err := svc.Db.NewSelect().
+		Model(&companies).
 		Relation("Jobs").
-		Select()
+		Exec(context.Background())
+
+	logrus.Debugf("Result from select %v", res)
 
 	return companies, postgres.HandleDbError(err)
 }
@@ -30,10 +32,13 @@ func (svc *companyRepository) GetOneCompanyOut(id *int64) (*model.Company, error
 		Id: id,
 	}
 
-	err := svc.Db.Model(company).
+	res, err := svc.Db.NewSelect().
+		Model(company).
 		WherePK().
 		Relation("Jobs").
-		Select()
+		Exec(context.Background())
+
+	logrus.Debugf("Result from select %v", res)
 
 	return company, postgres.HandleDbError(err)
 }
@@ -41,37 +46,38 @@ func (svc *companyRepository) GetOneCompanyOut(id *int64) (*model.Company, error
 func (svc *companyRepository) CreateCompanyOut(company *model.Company) (*int64, error) {
 	company.Id = nil
 
-	insert, err := svc.Db.
+	insert, err := svc.Db.NewInsert().
 		Model(company).
-		Relation("Jobs").
-		Insert()
+		Exec(context.Background())
+
+	logrus.Debugf("Result from select %v", insert)
 
 	if err != nil {
 		return nil, postgres.HandleDbError(err)
 	}
 
-	affected := insert.RowsAffected()
+	rowsAffected, err := insert.RowsAffected()
+
+	affected := rowsAffected
 	logrus.Info(affected)
 
 	return company.Id, err
 }
 
 func (svc *companyRepository) UpdateCompanyOut(id *int64, company *model.Company) (*int64, error) {
-	now := time.Now()
 	company.Id = id
-	company.UpdatedAt = &now
 
-	updated, err := svc.Db.
+	updated, err := svc.Db.NewUpdate().
 		Model(company).
 		WherePK().
-		Relation("Jobs").
-		UpdateNotZero()
+		OmitZero().
+		Exec(context.Background())
 
 	if err != nil {
 		return nil, postgres.HandleDbError(err)
 	}
 
-	affected := updated.RowsAffected()
+	affected, err := updated.RowsAffected()
 
 	logrus.Infof("Afftected %d", affected)
 
@@ -83,21 +89,19 @@ func (svc *companyRepository) UpdateCompanyOut(id *int64, company *model.Company
 }
 
 func (svc *companyRepository) DeleteCompanyOut(id *int64) error {
-	now := time.Now()
 	company := &model.Company{Id: id}
-	company.UpdatedAt = &now
-	company.DeletedAt = &now
 
-	deleted, err := svc.Db.
+	deleted, err := svc.Db.NewDelete().
 		Model(company).
 		WherePK().
-		UpdateNotZero()
+		WherePK().
+		Exec(context.Background())
 
 	if err != nil {
 		return err
 	}
 
-	affected := deleted.RowsAffected()
+	affected, err := deleted.RowsAffected()
 	logrus.Info(affected)
 
 	if affected == 0 {
@@ -107,7 +111,7 @@ func (svc *companyRepository) DeleteCompanyOut(id *int64) error {
 	return postgres.HandleDbError(err)
 }
 
-func NewCompanyRepository(db *pg.DB) port.CompanyPort {
+func NewCompanyRepository(db *bun.DB) port.CompanyPort {
 	return &companyRepository{
 		Db: db,
 	}
