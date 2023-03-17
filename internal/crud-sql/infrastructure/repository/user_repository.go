@@ -17,11 +17,10 @@ type userRepository struct {
 func (svc *userRepository) GetAllUsersOut() ([]*model.User, error) {
 	users := make([]*model.User, 0)
 
-	res, err := svc.Db.NewSelect().
-		Model(&users).
-		Exec(context.Background())
-
-	logrus.Debugf("Result from select %v", res)
+	err := svc.Db.NewSelect().
+		Model((*model.User)(nil)).
+		Relation("*").
+		Scan(context.Background(), &users)
 
 	return users, postgres.HandleDbError(err)
 }
@@ -31,12 +30,11 @@ func (svc *userRepository) GetOneUserOut(id *int64) (*model.User, error) {
 		Id: id,
 	}
 
-	res, err := svc.Db.NewSelect().
+	err := svc.Db.NewSelect().
 		Model(user).
+		Relation("*").
 		WherePK().
-		Exec(context.Background())
-
-	logrus.Debugf("Result from select %v", res)
+		Scan(context.Background())
 
 	return user, postgres.HandleDbError(err)
 }

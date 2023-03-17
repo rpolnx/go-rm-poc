@@ -13,7 +13,7 @@ type User struct {
 	Rg    *string `bun:"rg,notnull,unique"`
 	Cpf   *string `bun:"cpf,notnull,unique"`
 
-	Jobs []*Job `bun:"rel:has-many"`
+	Jobs []*Job `bun:"rel:has-many,join:id=user_id"`
 
 	Base
 }

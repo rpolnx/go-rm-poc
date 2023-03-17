@@ -17,12 +17,10 @@ type companyRepository struct {
 func (svc *companyRepository) GetAllCompaniesOut() ([]*model.Company, error) {
 	companies := make([]*model.Company, 0)
 
-	res, err := svc.Db.NewSelect().
-		Model(&companies).
+	err := svc.Db.NewSelect().
+		Model((*model.Company)(nil)).
 		Relation("Jobs").
-		Exec(context.Background())
-
-	logrus.Debugf("Result from select %v", res)
+		Scan(context.Background(), &companies)
 
 	return companies, postgres.HandleDbError(err)
 }
@@ -32,13 +30,11 @@ func (svc *companyRepository) GetOneCompanyOut(id *int64) (*model.Company, error
 		Id: id,
 	}
 
-	res, err := svc.Db.NewSelect().
+	err := svc.Db.NewSelect().
 		Model(company).
 		WherePK().
 		Relation("Jobs").
-		Exec(context.Background())
-
-	logrus.Debugf("Result from select %v", res)
+		Scan(context.Background())
 
 	return company, postgres.HandleDbError(err)
 }

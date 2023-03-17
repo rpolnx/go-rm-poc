@@ -48,9 +48,7 @@ func NewPgClient(cfgApp *config.App, cfgDb *config.Db) (*bun.DB, error) {
 		bundebug.FromEnv("BUNDEBUG"),
 	))
 
-	err := db.Ping()
-
-	if err != nil {
+	if err := db.Ping(); err != nil {
 		return nil, err
 	}
 
@@ -60,7 +58,7 @@ func NewPgClient(cfgApp *config.App, cfgDb *config.Db) (*bun.DB, error) {
 	initialDbMigrationsTime := time.Now()
 	logrus.Infof("[Postgres DB] Initializing pg migrations")
 
-	if err = RunMigrations(db, cfgDb); err != nil {
+	if err := RunMigrations(db, cfgDb); err != nil {
 		return nil, err
 	}
 
@@ -82,7 +80,6 @@ func RunMigrations(dbClient *bun.DB, cfg *config.Db) error {
 	}
 
 	tableName := migrate.WithTableName(fmt.Sprintf("%s.%s", cfg.Schema, cfg.MigrationTable))
-
 	migrator := migrate.NewMigrator(dbClient, migrations, tableName)
 
 	timeoutCtx, cancelCtx := context.WithTimeout(context.Background(), time.Duration(5)*time.Second)

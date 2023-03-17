@@ -10,10 +10,10 @@ type Job struct {
 	HoursPerDay *int     `bun:"hours_per_day,notnull"`
 
 	CompanyId *int64   `bun:"company_id"`
-	Company   *Company `bun:"fk:company_id,rel:has-one"`
+	Company   *Company `bun:"rel:has-one,join:company_id=id"`
 
-	//UserId *int64 `bun:"user_id"`
-	User *User `bun:"rel:has-one,join:user_id=id"`
+	UserId *int64 `bun:"user_id"`
+	User   *User  `bun:"rel:belongs-to,join:user_id=id"`
 
 	Base
 }
