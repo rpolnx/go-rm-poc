@@ -7,7 +7,6 @@ import (
 	"rpolnx.com.br/crud-sql/internal/crud-sql/domain/model"
 	port "rpolnx.com.br/crud-sql/internal/crud-sql/domain/ports"
 	"rpolnx.com.br/crud-sql/internal/crud-sql/infrastructure/repository/postgres"
-	"time"
 )
 
 type userRepository struct {
@@ -57,9 +56,7 @@ func (svc *userRepository) CreateUserOut(user *model.User) (*int64, error) {
 }
 
 func (svc *userRepository) UpdateUserOut(id *int64, user *model.User) (*int64, error) {
-	now := time.Now()
 	user.Id = id
-	user.UpdatedAt = &now
 
 	updated, err := svc.Db.
 		Model(user).
@@ -83,15 +80,12 @@ func (svc *userRepository) UpdateUserOut(id *int64, user *model.User) (*int64, e
 }
 
 func (svc *userRepository) DeleteUserOut(id *int64) error {
-	now := time.Now()
 	user := &model.User{Id: id}
-	user.UpdatedAt = &now
-	user.DeletedAt = &now
 
 	deleted, err := svc.Db.
 		Model(user).
 		WherePK().
-		UpdateNotZero()
+		Delete()
 
 	if err != nil {
 		return err

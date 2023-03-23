@@ -1,5 +1,7 @@
 package model
 
+import "github.com/go-pg/pg/v10"
+
 type User struct {
 	tableName struct{} `pg:"crud_sql.users"`
 
@@ -13,3 +15,9 @@ type User struct {
 
 	Base
 }
+
+var (
+	_ pg.BeforeInsertHook = (*User)(nil)
+	_ pg.BeforeUpdateHook = (*User)(nil)
+	_ pg.BeforeDeleteHook = (*User)(nil)
+)

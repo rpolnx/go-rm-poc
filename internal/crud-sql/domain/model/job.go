@@ -1,5 +1,7 @@
 package model
 
+import "github.com/go-pg/pg/v10"
+
 type Job struct {
 	tableName struct{} `pg:"crud_sql.jobs"`
 
@@ -15,3 +17,9 @@ type Job struct {
 
 	Base
 }
+
+var (
+	_ pg.BeforeInsertHook = (*Job)(nil)
+	_ pg.BeforeUpdateHook = (*Job)(nil)
+	_ pg.BeforeDeleteHook = (*Job)(nil)
+)

@@ -1,5 +1,7 @@
 package model
 
+import "github.com/go-pg/pg/v10"
+
 type Company struct {
 	tableName struct{} `pg:"crud_sql.companies"`
 
@@ -11,3 +13,9 @@ type Company struct {
 
 	Base
 }
+
+var (
+	_ pg.BeforeInsertHook = (*Company)(nil)
+	_ pg.BeforeUpdateHook = (*Company)(nil)
+	_ pg.BeforeDeleteHook = (*Company)(nil)
+)
