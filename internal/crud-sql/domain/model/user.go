@@ -1,15 +1,21 @@
 package model
 
+import (
+	"github.com/uptrace/bun"
+)
+
 type User struct {
-	tableName struct{} `pg:"crud_sql.users"`
+	bun.BaseModel `bun:"table:crud_sql.users,alias:u"`
 
-	Id    *int64  `pg:"id,pk"`
-	Name  *string `pg:"name,"`
-	Email *string `pg:"email,notnull,unique"`
-	Rg    *string `pg:"rg,notnull,unique"`
-	Cpf   *string `pg:"cpf,notnull,unique"`
+	Id    *int64  `bun:"id,pk,autoincrement"`
+	Name  *string `bun:"name,"`
+	Email *string `bun:"email,notnull,unique"`
+	Rg    *string `bun:"rg,notnull,unique"`
+	Cpf   *string `bun:"cpf,notnull,unique"`
 
-	Jobs []*Job `pg:"rel:has-many"`
+	Jobs []*Job `bun:"rel:has-many,join:id=user_id"`
 
 	Base
 }
+
+var _ bun.BeforeAppendModelHook = (*User)(nil)

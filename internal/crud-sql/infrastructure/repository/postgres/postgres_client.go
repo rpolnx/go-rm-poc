@@ -1,48 +1,64 @@
 package postgres
 
 import (
-	"context"
+	"database/sql"
 	"fmt"
-	"github.com/go-pg/migrations/v8"
-	"github.com/go-pg/pg/v10"
 	"github.com/sirupsen/logrus"
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/uptrace/bun/migrate"
+	"golang.org/x/net/context"
+	"os"
 	"rpolnx.com.br/crud-sql/internal/crud-sql/application/config"
 	"time"
+
+	"github.com/uptrace/bun/driver/pgdriver"
+	"github.com/uptrace/bun/extra/bundebug"
 )
 
-func NewPgClient(cfgApp *config.App, cfgDb *config.Db) (*pg.DB, error) {
+func NewPgClient(cfgApp *config.App, cfgDb *config.Db) (*bun.DB, error) {
 	initialDbTime := time.Now()
 
 	logrus.Infof("[Postgres DB] Initializing pg dependency")
 
-	db := pg.Connect(&pg.Options{
-		Addr:            fmt.Sprintf("%s:%d", cfgDb.Host, cfgDb.Port),
-		User:            cfgDb.Username,
-		Password:        cfgDb.Password,
-		Database:        cfgDb.DbName,
-		ApplicationName: cfgApp.Name,
-		PoolSize:        10,
-		ReadTimeout:     time.Duration(cfgDb.Timeout) * time.Second,
-		WriteTimeout:    time.Duration(cfgDb.Timeout) * time.Second,
-	})
-	db.AddQueryHook(config.DbLogger{})
+	pgCon := pgdriver.NewConnector(
+		pgdriver.WithNetwork("tcp"),
+		pgdriver.WithAddr(fmt.Sprintf("%s:%d", cfgDb.Host, cfgDb.Port)),
+		pgdriver.WithInsecure(true), // disable TLS
+		//pgdriver.WithTLSConfig(&tls.Config{InsecureSkipVerify: true}),
+		pgdriver.WithUser(cfgDb.Username),
+		pgdriver.WithPassword(cfgDb.Password),
+		pgdriver.WithDatabase(cfgDb.DbName),
+		pgdriver.WithApplicationName(cfgApp.Name),
+		pgdriver.WithTimeout(time.Duration(cfgDb.Timeout)*time.Second),
+		pgdriver.WithDialTimeout(time.Duration(cfgDb.Timeout)*time.Second),
+		pgdriver.WithReadTimeout(time.Duration(cfgDb.Timeout)*time.Second),
+		pgdriver.WithWriteTimeout(time.Duration(cfgDb.Timeout)*time.Second),
+		pgdriver.WithConnParams(map[string]interface{}{
+			"search_path": cfgDb.Schema,
+		}),
+	)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cfgDb.Timeout)*time.Second)
-	defer cancel()
+	sqldb := sql.OpenDB(pgCon)
 
-	err := db.Ping(ctx)
+	db := bun.NewDB(sqldb, pgdialect.New())
+
+	db.AddQueryHook(bundebug.NewQueryHook(
+		bundebug.WithVerbose(true),
+		bundebug.FromEnv("BUNDEBUG"),
+	))
+
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
 
 	deltaDb := time.Since(initialDbTime).Milliseconds()
 	logrus.Infof("[Postgres DB] Finalized pg dependency in %dms", deltaDb)
 
-	if err != nil {
-		return nil, err
-	}
-
 	initialDbMigrationsTime := time.Now()
 	logrus.Infof("[Postgres DB] Initializing pg migrations")
 
-	if err = RunMigrations(db, cfgDb); err != nil {
+	if err := RunMigrations(db, cfgDb); err != nil {
 		return nil, err
 	}
 
@@ -52,49 +68,38 @@ func NewPgClient(cfgApp *config.App, cfgDb *config.Db) (*pg.DB, error) {
 	return db, nil
 }
 
-func RunMigrations(dbClient *pg.DB, cfg *config.Db) error {
-	c := migrations.NewCollection()
-	c.DisableSQLAutodiscover(true)
-	err := c.DiscoverSQLMigrations(cfg.MigrationPath)
+func RunMigrations(dbClient *bun.DB, cfg *config.Db) error {
+
+	dirFs := os.DirFS("configs/migrations")
+
+	migrations := migrate.NewMigrations()
+
+	if err := migrations.Discover(dirFs); err != nil {
+		logrus.Errorf("[Postgres DB] setting DiscoverCaller() to path %s failed: %s", cfg.MigrationPath, err.Error())
+		return err
+	}
+
+	tableName := migrate.WithTableName(fmt.Sprintf("%s.%s", cfg.Schema, cfg.MigrationTable))
+	migrator := migrate.NewMigrator(dbClient, migrations, tableName)
+
+	timeoutCtx, cancelCtx := context.WithTimeout(context.Background(), time.Duration(5)*time.Second)
+	defer cancelCtx()
+
+	if err := migrator.Init(timeoutCtx); err != nil {
+		logrus.Errorf("[Postgres DB] error setting up first version %v\n", err.Error())
+		return err
+	}
+
+	group, err := migrator.Migrate(timeoutCtx)
+
 	if err != nil {
-		logrus.Errorf("[Postgres DB] setting DiscoverSQLMigrations() to path %s failed: %s", cfg.MigrationPath, err.Error())
+		logrus.WithFields(logrus.Fields{
+			"path":        cfg.MigrationPath,
+			"group":       group,
+			"err.Error()": err.Error(),
+		}).Errorf("[Postgres DB] Finishing migrations mechanism")
+
 		return err
-	}
-
-	c.SetTableName(fmt.Sprintf("%s.%s", cfg.Schema, cfg.MigrationTable))
-
-	oldVersion, newVersion, err := c.Run(dbClient, "up")
-
-	if err == nil {
-		logrus.Debugf("[Postgres DB] version is %d\n", newVersion)
-		return nil
-	}
-
-	logrus.WithFields(logrus.Fields{
-		"path":        cfg.MigrationPath,
-		"oldVersion":  oldVersion,
-		"newVersion":  newVersion,
-		"err.Error()": err.Error(),
-	}).Debugf("[Postgres DB] Initializing migrations mechanism")
-
-	//init migrations mechanism for the 1st run
-	if newVersion == 0 {
-		_, _, err = c.Run(dbClient, "init")
-		if err != nil {
-			return err
-		}
-
-		oldVersion, newVersion, err = c.Run(dbClient, "up")
-	}
-
-	if err != nil { //this check is because it can be changed by new c.Run(db) two lines upper
-		return err
-	}
-
-	if newVersion != oldVersion {
-		logrus.Infof("[Postgres DB] migrated from version %d to %d", oldVersion, newVersion)
-	} else {
-		logrus.Debugf("[Postgres DB] version is %d\n", oldVersion)
 	}
 
 	return nil

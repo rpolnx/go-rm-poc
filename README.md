@@ -1,21 +1,11 @@
-# Golang go-pg poc
+# Golang crud relational sql
 
-## Running and build aplication
+- Bun ORM
 
-Run application directly on main.go
+## Setup
 
-```sh
-    go get -u -v -f all
-    go mod tidy
-```
+See Makefile for commands
 
-```sh
-  go build cmd/go_pg_poc.go
-```
-
-```sh
-  go run cmd/go_pg_poc.go
-```
 ---
 
 # TODO
