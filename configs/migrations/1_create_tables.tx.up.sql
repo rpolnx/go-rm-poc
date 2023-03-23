@@ -26,8 +26,8 @@ CREATE TABLE crud_sql."companies"
 CREATE TABLE crud_sql."jobs"
 (
     id            serial PRIMARY KEY,
-    company_id    int REFERENCES crud_sql.companies (id),
-    user_id       int REFERENCES crud_sql.users (id),
+    company2_id    int REFERENCES crud_sql.companies (id),
+    user2_id       int REFERENCES crud_sql.users (id),
     month_salary  decimal NOT NULL,
     hours_per_day int     NOT NULL,
 

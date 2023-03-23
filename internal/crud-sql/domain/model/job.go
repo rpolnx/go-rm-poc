@@ -9,11 +9,11 @@ type Job struct {
 	MonthSalary *float64 `pg:"month_salary,notnull"`
 	HoursPerDay *int     `pg:"hours_per_day,notnull"`
 
-	CompanyId *int64   `pg:"company_id"`
-	Company   *Company `pg:"fk:company_id,rel:has-one"`
+	CompanyId *int64   `pg:"company2_id"`
+	Company   *Company `pg:"fk:company2_id,rel:has-one"`
 
-	UserId *int64 `pg:"user_id"`
-	User   *User  `pg:"fk:user_id,rel:has-one"`
+	UserId *int64 `pg:"user2_id"`
+	User   *User  `pg:"fk:user2_id,rel:has-one"`
 
 	Base
 }
