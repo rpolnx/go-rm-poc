@@ -1,7 +1,10 @@
 package controller
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"rpolnx.com.br/crud-sql/internal/crud-sql/application/config"
 )
@@ -16,6 +19,15 @@ type healthcheckController struct {
 
 func (h *healthcheckController) GetServerStatus(c *gin.Context) {
 	m := map[string]interface{}{"status": "OK"}
+
+	span := opentracing.SpanFromContext(c.Request.Context())
+
+	context := span.Context()
+	fmt.Println(context)
+
+	context
+
+	logrus.Info("Example")
 
 	c.JSON(http.StatusOK, m)
 }
